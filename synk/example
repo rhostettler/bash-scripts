@@ -1,0 +1,5 @@
+# synk example config file
+REMOTEDIR=  # put the remote directory here (incl. server, user, etc.)
+LOCALDIR=  # put the local directory here
+OPTIONS=""  # put the rsync options here, make sure to use quotes
+
