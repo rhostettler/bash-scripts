@@ -37,9 +37,9 @@ function open_pwdfile(){
     CHANGED=$?
     if [ $CHANGED != 0 ]; then
     	# Remove original file and update it with the new, encrypted file
-	    echo "File updated, encrypting and replacing..."
+        echo "File updated, encrypting and replacing..."
     	rm -f "${FILE}"
-	    gpg --output "${FILE}" -r ${KEYID} -e -s "${TMPFILE}"
+        gpg --output "${FILE}" -r ${KEYID} -e -s "${TMPFILE}"
     fi
 
     # Remove the temporary files
