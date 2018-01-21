@@ -1,0 +1,4 @@
+# pwman example config
+FILE=   # Location of the encrypted file
+KEYID=  # Encryption key ID
+
