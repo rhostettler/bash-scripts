@@ -10,11 +10,21 @@ function open_pwdfile(){
     TMPFILE=/tmp/pwman.ods
     LOTMPDIR=/tmp/pwman
 
-    # Generate some passwords, just in case
+    # Platform-specific things
     if [ `uname -s` == "Darwin" ]; then
+        # Set executables
+        GPG=gpg2
+        LO=/Applications/LibreOffice.app/Contents/MacOS/soffice
+        SHRED=gshred
+
         # Not on Mac, though.
-        echo "On MacOS, not generating any random passwords."
+#        echo "On MacOS, not generating any random passwords."
     else
+        GPG=gpg
+        LO=libreoffice
+        SHRED=shred
+
+        # Generate some passwords, just in case.
         echo "Here are a bunch of random passwords ('pwgen -sB 12 6'), you "
         echo "might find them useful:"
         echo ""
@@ -26,24 +36,24 @@ function open_pwdfile(){
     # libreoffice. This should be a blocking call enforced by the -env option 
     # for libreoffice.
     echo "Opening ${FILE}..."
-    gpg --output "${TMPFILE}" -d "${FILE}"
-    sha256sum ${TMPFILE} > "${TMPFILE}.sum"
-    libreoffice -env:UserInstallation=file://${LOTMPDIR} \
+    $GPG --output "${TMPFILE}" -d "${FILE}"
+    shasum -a 256 ${TMPFILE} > "${TMPFILE}.sum"
+    $LO -env:UserInstallation=file://${LOTMPDIR} \
         --calc "$TMPFILE" > /dev/null 2>&1
 
     # Check if the file changed (different SHA256-hash) and if so, re-encrypt 
     # and copy back
-    sha256sum --status -c "${TMPFILE}.sum"
+    shasum -a 256 --status -c "${TMPFILE}.sum"
     CHANGED=$?
     if [ $CHANGED != 0 ]; then
     	# Remove original file and update it with the new, encrypted file
         echo "File updated, encrypting and replacing..."
     	rm -f "${FILE}"
-        gpg --output "${FILE}" -r ${KEYID} -e -s "${TMPFILE}"
+        $GPG --output "${FILE}" -r ${KEYID} -e -s "${TMPFILE}"
     fi
 
     # Remove the temporary files
-    shred --remove "${TMPFILE}"
+    $SHRED --remove "${TMPFILE}"
     rm -f "${TMPFILE}.sum"
     rm -rf "${LOTMPDIR}"
 }
