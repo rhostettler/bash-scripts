@@ -19,7 +19,7 @@ for i in "${FILES[@]}"; do
 done
 
 # Show how many files were found and let the user choose how to continue.
-echo "Found" `wc -l < "${TMPFILE}"` " files."
+echo "Found" `wc -l < "${TMPFILE}"` "files."
 ANSWER="x"
 while [ $ANSWER != "s" ] && [ $ANSWER != "S" ] && [ $ANSWER != "d" ] && [ $ANSWER != "D" ] && [ $ANSWER != "a" ] && [ $ANSWER != "A" ]; do
     echo -n "(S)how files, (D)elete, or (A)bort? "
