@@ -1,48 +1,54 @@
 #!/bin/bash
+# 
+# Bash script to remove files that match a filter/pattern
+#
+# Roland Hostettler <r.hostettler@gmx.ch>
+# vacuum.sh -- 2018-04-18 -- Version 1.0
 
-# Bash script to remove backup copies (ending with .m~)
-
-# Where to save the list of found files
-TMPFILE="/tmp/vacuum"
-
-# Find all MATLAB backup files
-#BACKUP_FILES=`find . -name "*.pls"`
-#BACKUP_FILES=`find . -name "*.m3u"`
-#BACKUP_FILES=`find . -name "*.m~"`
-#BACKUP_FILES=`find . -name "*.asv"`
-BACKUP_FILES=`find . -name "*.*~"`
-
-# Show the found files
-echo "Deleting the following files:"
-echo "$BACKUP_FILES"
-
-# Ask the user whether he/she wants to delete these files
-echo -n "Continue? [Y/n] "
-read -e ANSWER
-
-if [ -z $ANSWER ]; then
-	ANSWER="Y"
+if [ ${#} -lt 1 ]; then
+    echo "Usage: ${0} <file>"
+    echo "  <file>  File containing the file list and/or filters"
+    exit 1
 fi
 
-while [ $ANSWER != "y" ] && [ $ANSWER != "Y" ] && [ $ANSWER != "n" ] && [ $ANSWER != "N" ]; do
-	echo -n "Continue? [Y/n] "
-	read -e ANSWER
-
-	if [ -z $ANSWER ]; then
-		ANSWER="Y"
-	fi
+# Find all files that match the filters/list in the file provided
+TMPFILE=`mktemp`
+FILES=(`cat "${1}"`)
+for i in "${FILES[@]}"; do
+    find . -name "${i}" >> "${TMPFILE}"
 done
 
-# Delete the files if needed
-if [ $ANSWER == "y" ] || [ $ANSWER == "Y" ]; then
-	# Save the list of files in a file and read it line by line afterwards
-	echo "$BACKUP_FILES" > $TMPFILE
-	exec 0< "$TMPFILE"
-	while read -r FILE;	do
-		rm -rf "$FILE"
-	done
-	echo "Files removed."
+# Show how many files were found and let the user choose how to continue.
+echo "Found" `wc -l < "${TMPFILE}"` " files."
+ANSWER="x"
+while [ $ANSWER != "s" ] && [ $ANSWER != "S" ] && [ $ANSWER != "d" ] && [ $ANSWER != "D" ] && [ $ANSWER != "a" ] && [ $ANSWER != "A" ]; do
+    echo -n "(S)how files, (D)elete, or (A)bort? "
+    read -e ANSWER
+
+    if [ -z $ANSWER ]; then
+        ANSWER="x"
+    fi
+    if [ $ANSWER == "s" ] || [ $ANSWER == "S" ]; then
+        less "${TMPFILE}"
+        ANSWER="x"
+    fi
+done
+
+# Delete the files if requested
+if [ $ANSWER == "d" ] || [ $ANSWER == "D" ]; then
+    echo -n "Removing files..."
+    exec 0< "$TMPFILE"
+    while read -r FILE; do
+        rm -rf "$FILE"
+    done
+    echo "done."
 fi
+if [ $ANSWER == "a" ] || [ $ANSWER == "A" ]; then
+    echo "Aborting."
+fi
+
+# Clean up
+rm "${TMPFILE}"
 
 # EOF
 
